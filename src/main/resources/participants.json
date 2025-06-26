@@ -1,0 +1,7 @@
+{
+  "participants" : [ {
+    "participant_id" : "testId",
+    "email" : "test@email.com",
+    "name" : "Maria"
+  } ]
+}

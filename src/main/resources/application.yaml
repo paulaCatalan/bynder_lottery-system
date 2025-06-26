@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: lottery_system
+
+participants:
+  file:
+    path: participants.json
