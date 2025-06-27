@@ -5,3 +5,7 @@ spring:
 participants:
   file:
     path: src/main/resources/participants.json
+
+lottery_events:
+  file:
+    path: src/main/resources/lottery_events.json

@@ -34,10 +34,9 @@ public class DefaultJsonFileHandler<T, W> implements JsonFileHandler<T, W> {
                 W wrapper = objectMapper.readValue(jsonFile, wrapperClass);
                 if (wrapper instanceof com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper) {
                     return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper) wrapper).getParticipants();
-//                } else if (wrapper instanceof com.pcr.lottery_system.infrastructure.dto.LotteryEventsWrapper) {
-//                    return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.LotteryEventsWrapper) wrapper).getLotteryEvents();
-//                }
-                }
+                } else if (wrapper instanceof com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper) {
+                    return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper) wrapper).getLotteryEvents();
+                  }
                 throw new IllegalArgumentException("Unsupported wrapper type for readFromFile: " + wrapperClass.getName());
 
             } catch (MismatchedInputException e) {
@@ -60,12 +59,11 @@ public class DefaultJsonFileHandler<T, W> implements JsonFileHandler<T, W> {
                     com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper participantsWrapper = new com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper();
                     participantsWrapper.setParticipants((List<com.pcr.lottery_system.infrastructure.dto.ParticipantJson>) dataList);
                     wrapper = (W) participantsWrapper;
-//                } else if (wrapperClass == com.pcr.lottery_system.infrastructure.dto.LotteryEventsWrapper.class) {
-//                    com.pcr.lottery_system.infrastructure.dto.LotteryEventsWrapper lotteryEventsWrapper = new com.pcr.lottery_system.infrastructure.dto.LotteryEventsWrapper();
-//                    lotteryEventsWrapper.setLotteryEvents((List<com.pcr.lottery_system.infrastructure.dto.LotteryEventJson>) dataList);
-//                    wrapper = (W) lotteryEventsWrapper;
+                } else if (wrapperClass == com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper.class) {
+                    com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper lotteryEventsWrapper = new com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper();
+                    lotteryEventsWrapper.setLotteryEvents((List<com.pcr.lottery_system.infrastructure.dto.LotteryEventJson>) dataList);
+                    wrapper = (W) lotteryEventsWrapper;
                 } else {
-                    // Fallback or error for unsupported wrapper types
                     throw new IllegalArgumentException("Unsupported wrapper type for writeToFile: " + wrapperClass.getName());
                 }
             } catch (Exception e) {
