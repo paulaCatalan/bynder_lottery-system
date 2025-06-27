@@ -2,7 +2,7 @@ package com.pcr.lottery_system.infrastructure.dto;
 
 import java.util.List;
 
-public class ParticipantsWrapper {
+public class ParticipantListWrapper {
     private List<ParticipantJson> participants;
 
     public List<ParticipantJson> getParticipants() {

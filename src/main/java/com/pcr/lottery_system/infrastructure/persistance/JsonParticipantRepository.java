@@ -1,14 +1,15 @@
-package com.pcr.lottery_system.infrastructure.persistance;
+package com.pcr.lottery_system.infrastructure.persistance;// --- Infrastructure Layer: Repository Implementation (JSON File-Based) ---
 
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
 import com.pcr.lottery_system.domain.model.Participant;
 import com.pcr.lottery_system.domain.repository.ParticipantRepository;
-import com.pcr.lottery_system.infrastructure.converter.ParticipantConverter;
 import com.pcr.lottery_system.infrastructure.dto.ParticipantJson;
-import com.pcr.lottery_system.infrastructure.dto.ParticipantsWrapper;
+import com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper;
+import com.pcr.lottery_system.infrastructure.converter.ParticipantConverter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -21,7 +22,8 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Repository
-public class JsonParticipantRepository implements ParticipantRepository {
+public class JsonParticipantRepository implements ParticipantRepository{
+
     private final ObjectMapper objectMapper;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final File participantsFile;
@@ -40,26 +42,54 @@ public class JsonParticipantRepository implements ParticipantRepository {
                     participantsFile.getParentFile().mkdirs();
                 }
                 participantsFile.createNewFile();
-                writeParticipantsToFile(Collections.emptyList());
+                writeAllParticipantsToFile(Collections.emptyList());
             } catch (IOException e) {
                 System.err.println("Error initializing participants JSON file: " + e.getMessage());
                 throw new RuntimeException("Failed to initialize JSON repository", e);
             }
         }
+    }
 
+    private List<ParticipantJson> readAllParticipantsFromFile() throws IOException {
+        lock.readLock().lock();
+        try {
+            if (!participantsFile.exists() || participantsFile.length() == 0) {
+                return Collections.emptyList();
+            }
+            try {
+                ParticipantListWrapper wrapper = objectMapper.readValue(participantsFile, ParticipantListWrapper.class);
+                return wrapper.getParticipants() != null ? wrapper.getParticipants() : Collections.emptyList();
+            } catch (MismatchedInputException e) {
+                System.err.println("Warning: JSON file content does not match expected wrapper structure. Treating as empty. Error: " + e.getMessage());
+                return Collections.emptyList();
+            }
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    private void writeAllParticipantsToFile(List<ParticipantJson> participantsJson) throws IOException {
+        lock.writeLock().lock();
+        try {
+            ParticipantListWrapper wrapper = new ParticipantListWrapper();
+            wrapper.setParticipants(participantsJson);
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(participantsFile, wrapper);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public Participant findByEmail(String email) {
         try {
-            List<ParticipantJson> allParticipants = readAllParticipantsFromFile(participantsFile.getPath());
+            List<ParticipantJson> allParticipants = readAllParticipantsFromFile();
             for (ParticipantJson participantJson : allParticipants) {
                 if (participantJson.email().equals(email)) {
                     return new Participant(participantJson.participant_id(), participantJson.email(), participantJson.name());
 //                    return participantConverter.toDomain(participantJson);
                 }
             }
-            return null; // Not found
+            return null;
         } catch (IOException e) {
             System.err.println("Error finding participant by email: " + email + " - " + e.getMessage());
             throw new RuntimeException("Persistence error finding participant by email", e);
@@ -70,15 +100,14 @@ public class JsonParticipantRepository implements ParticipantRepository {
     public void save(Participant participant) {
         lock.writeLock().lock();
         try {
-            List<ParticipantJson> currentParticipants = new ArrayList<>(readAllParticipantsFromFile(participantsFile.getPath()));
+            List<ParticipantJson> currentParticipants = new ArrayList<>(readAllParticipantsFromFile());
             ParticipantJson participantToSave = new ParticipantJson( //TODO: Extract to converter
                     participant.participantId(),
                     participant.email(),
                     participant.name());
             currentParticipants.add(participantToSave);
 
-            writeParticipantsToFile(currentParticipants);
-
+            writeAllParticipantsToFile(currentParticipants);
         } catch (IOException e) {
             System.err.println("Error saving participant: " + participant.participantId() + " - " + e.getMessage());
             throw new RuntimeException("Persistence error saving participant", e);
@@ -86,48 +115,4 @@ public class JsonParticipantRepository implements ParticipantRepository {
             lock.writeLock().unlock();
         }
     }
-
-    private void writeParticipantsToFile(List<ParticipantJson> participantsJson) throws IOException {
-        lock.writeLock().lock();
-        try {
-            ParticipantListWrapper wrapper = new ParticipantListWrapper(participantsJson);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(participantsFile, wrapper);
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    private List<ParticipantJson> readAllParticipantsFromFile(String filePath) throws IOException {
-        lock.readLock().lock();
-        List<ParticipantJson> participants = null;
-        try {
-            if (!participantsFile.exists() || participantsFile.length() == 0) {
-                return Collections.emptyList();
-            }
-
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-
-                File jsonFile = new File(filePath);
-
-                ParticipantsWrapper wrapper = mapper.readValue(jsonFile, ParticipantsWrapper.class);
-
-                participants = wrapper.getParticipants();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } finally {
-            lock.readLock().unlock();
-        }
-        return participants;
-    }
-
 }
-
-record ParticipantListWrapper(
-        @JsonProperty("participants") List<ParticipantJson> participants
-) {
-}
-
-
