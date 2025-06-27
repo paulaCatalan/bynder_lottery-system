@@ -4,4 +4,4 @@ spring:
 
 participants:
   file:
-    path: participants.json
+    path: src/main/resources/participants.json
