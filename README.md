@@ -31,3 +31,18 @@ An example of cURL:
 `
 
 _Remember that you can only register a participant if the email has not been registered before_
+
+## Other resources related to this development
+
+### Diagrams and organization
+#### MIRO Board
+The development of this project is backed up by visual diagrams and tasks organization
+[in this MIRO Board](https://miro.com/app/board/uXjVIkTX1yU=/?share_link_id=960275875808)
+
+### Version Control and Commits
+
+This project's development adheres to best practices in version control, focusing on:
+
+* **Atomic Commits:** Changes are introduced in small, focused steps, with each commit addressing a single logical change.
+* **Continuous Integration Readiness:** Every commit ensures the project remains in a buildable and functional state.
+* **Clear Commit Messages:** Commit messages are concise, descriptive, and enhanced with a relevant Gitmoji from [this emoji dictionary](https://gitmoji.dev/) for quick visual context.
