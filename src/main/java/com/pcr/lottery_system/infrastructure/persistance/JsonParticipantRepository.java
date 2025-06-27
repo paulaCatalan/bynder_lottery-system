@@ -27,14 +27,18 @@ public class JsonParticipantRepository implements ParticipantRepository{
     private final ObjectMapper objectMapper;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final File participantsFile;
+    private final ParticipantConverter converter;
 
     public JsonParticipantRepository(
-            @Value("${participants.file.path:participants.json}") String filePath
+            @Value("${participants.file.path:participants.json}") String filePath,
+            ParticipantConverter converter
     ) {
         this.objectMapper = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
 
         this.participantsFile = Paths.get(filePath).toFile();
+
+        this.converter = converter;
 
         if (!participantsFile.exists()) {
             try {
@@ -85,8 +89,7 @@ public class JsonParticipantRepository implements ParticipantRepository{
             List<ParticipantJson> allParticipants = readAllParticipantsFromFile();
             for (ParticipantJson participantJson : allParticipants) {
                 if (participantJson.email().equals(email)) {
-                    return new Participant(participantJson.participant_id(), participantJson.email(), participantJson.name());
-//                    return participantConverter.toDomain(participantJson);
+                    return converter.toDomain(participantJson);
                 }
             }
             return null;
@@ -101,10 +104,7 @@ public class JsonParticipantRepository implements ParticipantRepository{
         lock.writeLock().lock();
         try {
             List<ParticipantJson> currentParticipants = new ArrayList<>(readAllParticipantsFromFile());
-            ParticipantJson participantToSave = new ParticipantJson( //TODO: Extract to converter
-                    participant.participantId(),
-                    participant.email(),
-                    participant.name());
+            ParticipantJson participantToSave = converter.toDto(participant);
             currentParticipants.add(participantToSave);
 
             writeAllParticipantsToFile(currentParticipants);
