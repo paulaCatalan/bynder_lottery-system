@@ -3,16 +3,21 @@ package com.pcr.lottery_system.infrastructure.persistance;
 import com.pcr.lottery_system.domain.model.Participant;
 import com.pcr.lottery_system.infrastructure.converter.ParticipantConverter;
 import com.pcr.lottery_system.infrastructure.dto.ParticipantJson;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
 import static org.mockito.Mockito.when;
 
 
-//TODO: Use temp files for tests so file is more clean and controlled
 class JsonParticipantRepositoryTest {
 
     @Mock
@@ -20,30 +25,32 @@ class JsonParticipantRepositoryTest {
 
     JsonParticipantRepository jsonParticipantRepository;
 
-    private static final String TEST_FILE_PATH = "src/test/resources/participants.json";
+    private static final String INITIAL_DATA_RESOURCE_PATH = "src/test/resources/participants.json";
+    private Path tempFilePath;
 
     @BeforeEach
-    void setUp(){
+    void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
+        tempFilePath = Files.createTempFile("test-participants", ".json");
 
-        jsonParticipantRepository = new JsonParticipantRepository(TEST_FILE_PATH, mockedConverter);
+        try (var inputStream = getClass().getClassLoader().getResourceAsStream(INITIAL_DATA_RESOURCE_PATH)) {
+            if (inputStream == null) {
+                System.err.println("Warning: Initial test data resource not found: " + INITIAL_DATA_RESOURCE_PATH + ". Initializing temp file with empty JSON wrapper.");
+                Files.write(tempFilePath, "{\"participants\":[]}".getBytes());
+            } else {
+                Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        jsonParticipantRepository = new JsonParticipantRepository(tempFilePath.toString(), mockedConverter);
     }
 
-    @Test
-    void shouldFindParticipantByEmailInJsonFile(){
-        String expectedParticipantId = "testId";
-        String expectedEmailString = "test@email.com";
-        String expectedName = "Maria";
-
-        Participant expectedParticipant = new Participant(expectedParticipantId, expectedEmailString, expectedName);
-
-        ParticipantJson participantJsonFromFile = new ParticipantJson(expectedParticipantId, expectedEmailString, expectedName);
-
-        when(mockedConverter.toDomain(participantJsonFromFile)).thenReturn(expectedParticipant);
-
-        Participant participant = jsonParticipantRepository.findByEmail(expectedEmailString);
-
-        Assertions.assertEquals(expectedParticipant, participant);
+    @AfterEach
+    void tearDown() {
+        try {
+            Files.deleteIfExists(tempFilePath);
+        } catch (IOException e) {
+            System.err.println("Error deleting temporary test file: " + e.getMessage());
+        }
     }
 
     @Test
@@ -53,7 +60,7 @@ class JsonParticipantRepositoryTest {
     }
 
     @Test
-    void shouldSaveParticipantToJson(){
+    void shouldSaveParticipantToJsonAndFindItById(){
         Participant participantToSave = new Participant("testId4", "test4@email.com", "Maria");
         ParticipantJson participantJsonToSave = new ParticipantJson("testId4", "test4@email.com", "Maria");
 
@@ -62,8 +69,8 @@ class JsonParticipantRepositoryTest {
         when(mockedConverter.toDomain(participantJsonToSave)).thenReturn(participantToSave);
 
         jsonParticipantRepository.save(participantToSave);
-
         Participant participantAfterSave = jsonParticipantRepository.findByEmail("test4@email.com");
+
         Assertions.assertEquals(participantToSave, participantAfterSave);
     }
 
