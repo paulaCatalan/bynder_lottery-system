@@ -1,8 +1,10 @@
 package com.pcr.lottery_system.infrastructure.persistance;
 
 import com.pcr.lottery_system.domain.model.Participant;
+import com.pcr.lottery_system.infrastructure.JsonFileHandler;
 import com.pcr.lottery_system.infrastructure.converter.ParticipantConverter;
 import com.pcr.lottery_system.infrastructure.dto.ParticipantJson;
+import com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,12 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 
 class JsonParticipantRepositoryTest {
@@ -23,25 +30,38 @@ class JsonParticipantRepositoryTest {
     @Mock
     ParticipantConverter mockedConverter;
 
+    @Mock
+    JsonFileHandler<ParticipantJson, ParticipantListWrapper> mockedFileHandler;
+
     JsonParticipantRepository jsonParticipantRepository;
 
-    private static final String INITIAL_DATA_RESOURCE_PATH = "src/test/resources/participants.json";
     private Path tempFilePath;
+
+    private List<ParticipantJson> simulatedFileContent;
+
 
     @BeforeEach
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
-        tempFilePath = Files.createTempFile("test-participants", ".json");
 
-        try (var inputStream = getClass().getClassLoader().getResourceAsStream(INITIAL_DATA_RESOURCE_PATH)) {
-            if (inputStream == null) {
-                System.err.println("Warning: Initial test data resource not found: " + INITIAL_DATA_RESOURCE_PATH + ". Initializing temp file with empty JSON wrapper.");
-                Files.write(tempFilePath, "{\"participants\":[]}".getBytes());
-            } else {
-                Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-        }
-        jsonParticipantRepository = new JsonParticipantRepository(tempFilePath.toString(), mockedConverter);
+        tempFilePath = Files.createTempFile("test-participants", ".json");
+        tempFilePath.toFile().deleteOnExit();
+
+        jsonParticipantRepository = new JsonParticipantRepository(tempFilePath.toString(), mockedConverter, mockedFileHandler);
+
+        simulatedFileContent = new ArrayList<>();
+
+        when(mockedFileHandler.readFromFile(any(File.class), eq(ParticipantListWrapper.class)))
+                .thenAnswer(invocation -> new ArrayList<>(simulatedFileContent));
+
+        doNothing().when(mockedFileHandler).ensureFileExistsAndInitialized(any(File.class), eq(ParticipantListWrapper.class));
+
+        doAnswer(invocation -> {
+            List<ParticipantJson> dataList = invocation.getArgument(1);
+            simulatedFileContent.clear();
+            simulatedFileContent.addAll(dataList);
+            return null;
+        }).when(mockedFileHandler).writeToFile(any(File.class), any(List.class), eq(ParticipantListWrapper.class));
     }
 
     @AfterEach
@@ -60,18 +80,40 @@ class JsonParticipantRepositoryTest {
     }
 
     @Test
-    void shouldSaveParticipantToJsonAndFindItById(){
-        Participant participantToSave = new Participant("testId4", "test4@email.com", "Maria");
-        ParticipantJson participantJsonToSave = new ParticipantJson("testId4", "test4@email.com", "Maria");
+    void shouldSaveParticipantToJson() throws IOException{
+        String newParticipantId = UUID.randomUUID().toString();
+        String newEmail = "test4@email.com";
+        String newName = "Maria";
+        Participant participantToSave = new Participant(newParticipantId, newEmail, newName);
+        ParticipantJson participantJsonToSave = new ParticipantJson(newParticipantId, newEmail, newName);
 
         when(mockedConverter.toDto(participantToSave)).thenReturn(participantJsonToSave);
-
         when(mockedConverter.toDomain(participantJsonToSave)).thenReturn(participantToSave);
 
         jsonParticipantRepository.save(participantToSave);
-        Participant participantAfterSave = jsonParticipantRepository.findByEmail("test4@email.com");
 
-        Assertions.assertEquals(participantToSave, participantAfterSave);
+        verify(mockedFileHandler).writeToFile(any(), any(), any());
+    }
+
+    @Test
+    void shouldFindExistingParticipantByEmail() throws IOException {
+        String existingId = "existing-id-123";
+        String existingEmail = "existing@example.com";
+        String existingName = "Existing User";
+        ParticipantJson existingParticipantJson = new ParticipantJson(existingId, existingEmail, existingName);
+
+        simulatedFileContent.add(existingParticipantJson);
+
+        Participant expectedParticipant = new Participant(existingId, existingEmail, existingName);
+        when(mockedConverter.toDomain(existingParticipantJson)).thenReturn(expectedParticipant);
+
+        when(mockedFileHandler.readFromFile(any(File.class), eq(ParticipantListWrapper.class)))
+                .thenReturn(simulatedFileContent);
+
+        Participant foundParticipant = jsonParticipantRepository.findByEmail(existingEmail);
+
+        Assertions.assertNotNull(foundParticipant);
+        Assertions.assertEquals(expectedParticipant, foundParticipant);
     }
 
 }
