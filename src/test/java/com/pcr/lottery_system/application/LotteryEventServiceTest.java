@@ -12,8 +12,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 import java.util.List;
 
 
@@ -49,7 +49,19 @@ class LotteryEventServiceTest {
         lotteryEventService.closeLotteryEventsAtMidnight();
 
         verify(jsonLotteryEventRepository).findLotteryEventByStatus(LotteryStatus.OPEN);
-        verify(jsonLotteryEventRepository).save(closedLotteryEvent); //IDK If I need the update or I should save and that's all
+        verify(jsonLotteryEventRepository).save(closedLotteryEvent);
+    }
+
+    @Test
+    void shouldNotCloseOpenLotteryEventsAtMidnightIfThereAreNoOpenLotteries(){
+
+        when(jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN)).thenReturn(List.of());
+
+        lotteryEventService.closeLotteryEventsAtMidnight();
+
+        verify(jsonLotteryEventRepository).findLotteryEventByStatus(LotteryStatus.OPEN);
+        verify(jsonLotteryEventRepository, never()).save(any());
+
     }
 
 }

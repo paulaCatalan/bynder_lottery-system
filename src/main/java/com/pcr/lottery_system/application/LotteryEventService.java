@@ -49,14 +49,11 @@ public class LotteryEventService {
         List<LotteryEvent> openLotteries = lotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
         //Handle open lotteries being empty list with TDD
         System.out.println("Found " + openLotteries.size() + " OPEN lottery events to close.");
-
-        for (LotteryEvent openLottery : openLotteries) {
-            LotteryEvent closedLottery = openLottery.close();
-            lotteryEventRepository.save(closedLottery);
+        if (openLotteries != null && !openLotteries.isEmpty()) {
+            for (LotteryEvent openLottery : openLotteries) {
+                LotteryEvent closedLottery = openLottery.close();
+                lotteryEventRepository.save(closedLottery);
+            }
         }
-
-
-
-
     }
 }
