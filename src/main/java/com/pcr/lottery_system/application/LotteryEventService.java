@@ -56,4 +56,8 @@ public class LotteryEventService {
             }
         }
     }
+
+    public List<LotteryEvent> findLotteryEventsByStatus(LotteryStatus status) {
+        return lotteryEventRepository.findLotteryEventByStatus(status);
+    }
 }
