@@ -49,7 +49,7 @@ class LotteryEventServiceTest {
         lotteryEventService.closeLotteryEventsAtMidnight();
 
         verify(jsonLotteryEventRepository).findLotteryEventByStatus(LotteryStatus.OPEN);
-        verify(jsonLotteryEventRepository).updateLotteryEvent(closedLotteryEvent); //IDK If I need the update or I should save and that's all
+        verify(jsonLotteryEventRepository).save(closedLotteryEvent); //IDK If I need the update or I should save and that's all
     }
 
 }

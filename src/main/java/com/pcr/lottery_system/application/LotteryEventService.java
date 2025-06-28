@@ -52,7 +52,7 @@ public class LotteryEventService {
 
         for (LotteryEvent openLottery : openLotteries) {
             LotteryEvent closedLottery = openLottery.close();
-            lotteryEventRepository.updateLotteryEvent(closedLottery);
+            lotteryEventRepository.save(closedLottery);
         }
 
 

@@ -46,7 +46,18 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
         try {
             List<LotteryEventJson> currentEvents = jsonFileHandler.readFromFile(lotteryEventsFile, LotteryEventListWrapper.class);
             LotteryEventJson lotteryEventJson = converter.toDto(lotteryEvent);
-            currentEvents.add(lotteryEventJson);
+            boolean found = false;
+            for (int i = 0; i < currentEvents.size(); i++) {
+                if (currentEvents.get(i).id().equals(lotteryEventJson.id())) {
+                    currentEvents.set(i, lotteryEventJson);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                currentEvents.add(lotteryEventJson);
+            }
             jsonFileHandler.writeToFile(lotteryEventsFile, currentEvents, LotteryEventListWrapper.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -72,10 +83,5 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
             System.err.println("Error finding lottery events by status: " + status + " - " + e.getMessage());
             throw new RuntimeException("Persistence error finding lottery events by status", e);
         }
-    }
-
-    @Override
-    public void updateLotteryEvent(LotteryEvent lotteryEvent) {
-        //TODO
     }
 }

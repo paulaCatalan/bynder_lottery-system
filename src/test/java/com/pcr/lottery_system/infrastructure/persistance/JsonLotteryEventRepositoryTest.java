@@ -146,19 +146,47 @@ class JsonLotteryEventRepositoryTest {
                 LotteryStatus.CLOSED,
                 null
         );
-        LotteryEvent openLotteryEvent = new LotteryEvent(
-                "id",
-                Instant.now(),
-                Instant.now().plus(15, ChronoUnit.HOURS),
-                LotteryStatus.OPEN,
-                null
-        );
         simulatedFileContent.add(openLotteryEventJson);
         simulatedFileContent.add(closedLotteryEventJson);
 
         List<LotteryEvent> drawnLotteryEventsFound = jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.DRAWN);
 
         Assertions.assertEquals(List.of(), drawnLotteryEventsFound);
+    }
+
+    @Test
+    void shouldUpdateLotteryEventInJsonFile() {
+        LotteryEventJson openLotteryEventJson = new LotteryEventJson(
+                "id",
+                Instant.now().toString(),
+                Instant.now().plus(15, ChronoUnit.HOURS).toString(),
+                LotteryStatus.OPEN,
+                null
+        );
+        LotteryEvent updatedLotteryEvent = new LotteryEvent(
+                "id",
+                Instant.now(),
+                Instant.now().plus(15, ChronoUnit.HOURS),
+                LotteryStatus.CLOSED,
+                null
+        );
+        LotteryEventJson updatedLotteryEventJson = new LotteryEventJson(
+                "id",
+                Instant.now().toString(),
+                Instant.now().plus(15, ChronoUnit.HOURS).toString(),
+                LotteryStatus.CLOSED,
+                null
+        );
+        simulatedFileContent.add(openLotteryEventJson);
+        when(mockedConverter.toDto(updatedLotteryEvent)).thenReturn(updatedLotteryEventJson);
+        when(mockedConverter.toDomain(updatedLotteryEventJson)).thenReturn(updatedLotteryEvent);
+
+        jsonLotteryEventRepository.save(updatedLotteryEvent);
+
+        Assertions.assertEquals(1, simulatedFileContent.size());
+
+        LotteryEventJson storedEvent = simulatedFileContent.get(0);
+        Assertions.assertEquals(updatedLotteryEventJson, storedEvent);
     }
 
 }
