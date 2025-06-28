@@ -36,4 +36,8 @@ public record LotteryEvent(
     public static LotteryEvent createLottery(String id, Instant startTime, Instant endTime) {
         return new LotteryEvent(id, startTime, endTime, LotteryStatus.OPEN, null);
     }
+
+    public LotteryEvent close() {
+        return new LotteryEvent(this.id, this.startTime, this.endTime, LotteryStatus.CLOSED, this.winnerBallotId);
+    }
 }

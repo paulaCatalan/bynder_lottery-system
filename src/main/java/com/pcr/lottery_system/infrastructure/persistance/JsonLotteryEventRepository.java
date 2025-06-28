@@ -1,6 +1,7 @@
 package com.pcr.lottery_system.infrastructure.persistance;
 
 import com.pcr.lottery_system.domain.model.LotteryEvent;
+import com.pcr.lottery_system.domain.model.LotteryStatus;
 import com.pcr.lottery_system.domain.repository.LotteryEventRepository;
 import com.pcr.lottery_system.infrastructure.JsonFileHandler;
 import com.pcr.lottery_system.infrastructure.converter.LotteryEventConverter;
@@ -52,8 +53,16 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
     }
 
     @Override
-    public void findLotteryEventById(String id) {
+    public LotteryEvent findLotteryEventById(String id) {
         //TODO
+        LotteryEvent lotteryEvent;
+        return lotteryEvent = new LotteryEvent(null, null, null, null, null);
+    }
+
+    @Override
+    public List<LotteryEvent> findLotteryEventByStatus(LotteryStatus status) {
+        //TODO
+        return List.of();
     }
 
     @Override

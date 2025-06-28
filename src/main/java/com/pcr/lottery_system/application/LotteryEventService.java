@@ -1,6 +1,7 @@
 package com.pcr.lottery_system.application;
 
 import com.pcr.lottery_system.domain.model.LotteryEvent;
+import com.pcr.lottery_system.domain.model.LotteryStatus;
 import com.pcr.lottery_system.domain.repository.LotteryEventRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,7 +22,9 @@ public class LotteryEventService {
 
     @Scheduled(cron = "0 0 9 * * *")
     void startDailyLottery() {
-        LocalDateTime now = LocalDateTime.now(); // Gets current date and time in system's default timezone
+        System.out.println("Attempting to start a new daily lottery event...");
+
+        LocalDateTime now = LocalDateTime.now();
 
         Instant startTime = now.atZone(ZoneId.systemDefault())
                 .toInstant();
@@ -32,5 +36,27 @@ public class LotteryEventService {
         LotteryEvent newDailyLottery = LotteryEvent.createLottery(UUID.randomUUID().toString(), startTime, endTime);
 
         lotteryEventRepository.save(newDailyLottery);
+        System.out.println("New daily lottery event started: ID=" + newDailyLottery.id() +
+                ", Start=" + newDailyLottery.startTime() +
+                ", End=" + newDailyLottery.endTime() +
+                ", Status=" + newDailyLottery.status());
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    void closeLotteryEventsAtMidnight() {
+        System.out.println("Attempting to open lottery events...");
+
+        List<LotteryEvent> openLotteries = lotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
+        //Handle open lotteries being empty list with TDD
+        System.out.println("Found " + openLotteries.size() + " OPEN lottery events to close.");
+
+        for (LotteryEvent openLottery : openLotteries) {
+            LotteryEvent closedLottery = openLottery.close();
+            lotteryEventRepository.updateLotteryEvent(closedLottery);
+        }
+
+
+
+
     }
 }
