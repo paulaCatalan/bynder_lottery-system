@@ -19,9 +19,9 @@ Java 17 is required.
 
 The server will be started in port 8080 (http://localhost:8080/)
 
-### System functionalities
+## System functionalities
 
-**To register a user:**
+### User registration
 
 It can be done via cURL (POST) in  http://localhost:8080/api/participant/register
 
@@ -31,6 +31,10 @@ An example of cURL:
 `
 
 _Remember that you can only register a participant if the email has not been registered before_
+
+### Retrieve OPEN lotteries (that accept participation)
+
+It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/open
 
 ## Other resources related to this development
 
