@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class JsonLotteryEventRepository implements LotteryEventRepository {
@@ -61,8 +62,16 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
 
     @Override
     public List<LotteryEvent> findLotteryEventByStatus(LotteryStatus status) {
-        //TODO
-        return List.of();
+        try {
+            List<LotteryEventJson> allEvents = jsonFileHandler.readFromFile(lotteryEventsFile, LotteryEventListWrapper.class);
+            return allEvents.stream()
+                    .filter(eventJson -> eventJson.status() == status)
+                    .map(converter::toDomain)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            System.err.println("Error finding lottery events by status: " + status + " - " + e.getMessage());
+            throw new RuntimeException("Persistence error finding lottery events by status", e);
+        }
     }
 
     @Override

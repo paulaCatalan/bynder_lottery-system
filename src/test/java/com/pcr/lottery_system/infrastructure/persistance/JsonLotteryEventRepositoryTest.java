@@ -7,6 +7,7 @@ import com.pcr.lottery_system.infrastructure.converter.LotteryEventConverter;
 import com.pcr.lottery_system.infrastructure.dto.LotteryEventJson;
 import com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -93,6 +94,71 @@ class JsonLotteryEventRepositoryTest {
 
         verify(mockedFileHandler).writeToFile(any(), any(), any());
 
+    }
+
+    @Test
+    void shouldFindAndReturnLotteryEventByStatus() {
+        LotteryEventJson openLotteryEventJson = new LotteryEventJson(
+                "id",
+                Instant.now().toString(),
+                Instant.now().plus(15, ChronoUnit.HOURS).toString(),
+                LotteryStatus.OPEN,
+                null
+        );
+        LotteryEventJson closedLotteryEventJson = new LotteryEventJson(
+                "id2",
+                Instant.now().minus(15, ChronoUnit.HOURS).toString(),
+                Instant.now().minus(5, ChronoUnit.HOURS).toString(),
+                LotteryStatus.CLOSED,
+                null
+        );
+        LotteryEvent openLotteryEvent = new LotteryEvent(
+                "id",
+                Instant.now(),
+                Instant.now().plus(15, ChronoUnit.HOURS),
+                LotteryStatus.OPEN,
+                null
+        );
+        List<LotteryEvent> expectedOpenLotteryEventsList = List.of(openLotteryEvent);
+        simulatedFileContent.add(openLotteryEventJson);
+        simulatedFileContent.add(closedLotteryEventJson);
+        when(mockedConverter.toDomain(openLotteryEventJson)).thenReturn(openLotteryEvent);
+
+
+        List<LotteryEvent> openLotteryEventsFound = jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
+
+        Assertions.assertEquals(expectedOpenLotteryEventsList, openLotteryEventsFound);
+    }
+
+    @Test
+    void shouldReturnEmptyListIfNoLotteryEventsOfDesiredStatus() {
+        LotteryEventJson openLotteryEventJson = new LotteryEventJson(
+                "id",
+                Instant.now().toString(),
+                Instant.now().plus(15, ChronoUnit.HOURS).toString(),
+                LotteryStatus.OPEN,
+                null
+        );
+        LotteryEventJson closedLotteryEventJson = new LotteryEventJson(
+                "id2",
+                Instant.now().minus(15, ChronoUnit.HOURS).toString(),
+                Instant.now().minus(5, ChronoUnit.HOURS).toString(),
+                LotteryStatus.CLOSED,
+                null
+        );
+        LotteryEvent openLotteryEvent = new LotteryEvent(
+                "id",
+                Instant.now(),
+                Instant.now().plus(15, ChronoUnit.HOURS),
+                LotteryStatus.OPEN,
+                null
+        );
+        simulatedFileContent.add(openLotteryEventJson);
+        simulatedFileContent.add(closedLotteryEventJson);
+
+        List<LotteryEvent> drawnLotteryEventsFound = jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.DRAWN);
+
+        Assertions.assertEquals(List.of(), drawnLotteryEventsFound);
     }
 
 }
