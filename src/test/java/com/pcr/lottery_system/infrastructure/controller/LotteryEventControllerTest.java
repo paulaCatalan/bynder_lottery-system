@@ -1,9 +1,11 @@
 package com.pcr.lottery_system.infrastructure.controller;
 
 import com.pcr.lottery_system.application.LotteryEventService;
+import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
-import com.pcr.lottery_system.infrastructure.dto.LotteryEventResponse;
+import com.pcr.lottery_system.infrastructure.dto.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -22,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 class LotteryEventControllerTest {
 
@@ -80,5 +84,47 @@ class LotteryEventControllerTest {
         assertNotNull(responseEntity.getBody());
         assertEquals(0, responseEntity.getBody().size());
         assertEquals(List.of(), responseEntity.getBody());
+    }
+
+    @Test
+    void shouldSubmitLotteryParticipationsAndReturnOkStatus() {
+        Ballot ballot = new Ballot("generatedBallotId", "lotteryId", "participantId");
+        LotteryParticipationRequest request = new LotteryParticipationRequest(
+                "lotteryId",
+                "participantId"
+        );
+        ParticipateInLotteryCommand command = new ParticipateInLotteryCommand(
+                request.lotteryId(),
+                request.participantId()
+        );
+        when(lotteryEventService.participateInLotteryEvent(command)).thenReturn(ballot);
+
+        ResponseEntity<LotteryParticipationResponse> response = lotteryEventController.participateInALottery(request);
+
+        verify(lotteryEventService).participateInLotteryEvent(command);
+        Assertions.assertEquals(CREATED, response.getStatusCode());
+        Assertions.assertNotNull(response.getBody());
+        Assertions.assertEquals("Participation submitted successfully", response.getBody().message());
+    }
+
+    @Test
+    void shouldNotSubmitLotteryParticipationsIfBallotIdIsNotValidAndReturnServerError() {
+        Ballot ballot = new Ballot("", "lotteryId", "participantId");
+        LotteryParticipationRequest request = new LotteryParticipationRequest(
+                "lotteryId",
+                "participantId"
+        );
+        ParticipateInLotteryCommand command = new ParticipateInLotteryCommand(
+                request.lotteryId(),
+                request.participantId()
+        );
+        when(lotteryEventService.participateInLotteryEvent(command)).thenReturn(ballot);
+
+        ResponseEntity<LotteryParticipationResponse> response = lotteryEventController.participateInALottery(request);
+
+        verify(lotteryEventService).participateInLotteryEvent(command);
+        Assertions.assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Assertions.assertNotNull(response.getBody());
+        Assertions.assertEquals("Something went wrong. Participation NOT SUBMITTED.", response.getBody().message());
     }
 }

@@ -1,8 +1,10 @@
 package com.pcr.lottery_system.application;
 
+import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
 import com.pcr.lottery_system.domain.repository.LotteryEventRepository;
+import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -59,5 +61,9 @@ public class LotteryEventService {
 
     public List<LotteryEvent> findLotteryEventsByStatus(LotteryStatus status) {
         return lotteryEventRepository.findLotteryEventByStatus(status);
+    }
+
+    public Ballot participateInLotteryEvent(ParticipateInLotteryCommand participateInLotteryCommand) {
+        return new Ballot("", "", "");
     }
 }
