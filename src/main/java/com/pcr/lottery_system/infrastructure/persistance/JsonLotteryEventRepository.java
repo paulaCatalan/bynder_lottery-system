@@ -68,9 +68,18 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
 
     @Override
     public LotteryEvent findLotteryEventById(String id) {
-        //TODO
-        LotteryEvent lotteryEvent;
-        return lotteryEvent = new LotteryEvent(null, null, null, null, null);
+        try {
+            List<LotteryEventJson> allEvents = jsonFileHandler.readFromFile(lotteryEventsFile, LotteryEventListWrapper.class);
+            for (LotteryEventJson eventJson : allEvents) {
+                if (eventJson.id().equals(id)) {
+                    return converter.toDomain(eventJson);
+                }
+            }
+            return null;
+        } catch (IOException e) {
+            System.err.println("Error finding lottery event by ID: " + id + " - " + e.getMessage());
+            throw new RuntimeException("Persistence error finding lottery event by ID", e);
+        }
     }
 
     @Override

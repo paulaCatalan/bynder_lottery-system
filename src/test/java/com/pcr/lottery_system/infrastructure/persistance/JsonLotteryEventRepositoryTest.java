@@ -132,6 +132,40 @@ class JsonLotteryEventRepositoryTest {
     }
 
     @Test
+    void shouldFindAndReturnLotteryEventById() {
+        LotteryEventJson lotteryEventJson1 = new LotteryEventJson(
+                "id",
+                Instant.now().toString(),
+                Instant.now().plus(15, ChronoUnit.HOURS).toString(),
+                LotteryStatus.OPEN,
+                null
+        );
+        LotteryEventJson lotteryEventJson2 = new LotteryEventJson(
+                "id2",
+                Instant.now().minus(15, ChronoUnit.HOURS).toString(),
+                Instant.now().minus(5, ChronoUnit.HOURS).toString(),
+                LotteryStatus.CLOSED,
+                null
+        );
+        LotteryEvent lotteryEvent1 = new LotteryEvent(
+                "id",
+                Instant.now(),
+                Instant.now().plus(15, ChronoUnit.HOURS),
+                LotteryStatus.OPEN,
+                null
+        );
+
+        simulatedFileContent.add(lotteryEventJson1);
+        simulatedFileContent.add(lotteryEventJson2);
+        when(mockedConverter.toDomain(lotteryEventJson1)).thenReturn(lotteryEvent1);
+
+
+        LotteryEvent lotteryEventFound = jsonLotteryEventRepository.findLotteryEventById("id");
+
+        Assertions.assertEquals(lotteryEvent1, lotteryEventFound);
+    }
+
+    @Test
     void shouldFindLotteryEventsByEndDate() {
         LocalDate testDate = LocalDate.now();
         Instant endOfDay = testDate.atTime(23, 59, 59).atOffset(ZoneOffset.UTC).toInstant();
