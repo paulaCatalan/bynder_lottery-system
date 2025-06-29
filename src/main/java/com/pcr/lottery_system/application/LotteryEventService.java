@@ -104,14 +104,7 @@ public class LotteryEventService {
     }
 
     public List<LotteryEvent> findDrawnLotteriesByDate(LocalDate date) {
-//        LotteryEvent lotteryEvent = lotteryEventRepository.findByDate(date);
-//        if (lotteryEvent == null) {
-//            throw new LotteryNotFoundException(date);
-//        }
-//        if (lotteryEvent.status() != LotteryStatus.DRAWN) {
-//            throw new InvalidLotteryEventStatusException("Lottery for date " + date + " is not yet DRAWN. Current status: " + lotteryEvent.status() + ".");
-//        }
-//        return lotteryEvent;
-        return List.of();
+        return lotteryEventRepository.findLotteryEventByDate(date)
+                .stream().filter(lotteryEvent -> lotteryEvent.status() == LotteryStatus.DRAWN).toList();
     }
 }

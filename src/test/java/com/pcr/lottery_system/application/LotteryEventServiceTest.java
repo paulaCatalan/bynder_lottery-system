@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -186,5 +188,36 @@ class LotteryEventServiceTest {
         verify(jsonBallotRepository, never()).save(ballot);
         assertNull(ballot);
     }
+
+    @Test
+    void shouldReturnOnlyDrawnEventsForADate(){
+        LocalDate testDate = LocalDate.of(2025, 7, 1);
+        String lotteryId = UUID.randomUUID().toString();
+        String winnerBallotId = UUID.randomUUID().toString();
+        LotteryEvent drawnLottery = new LotteryEvent(
+                lotteryId,
+                testDate.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                testDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant(),
+                LotteryStatus.DRAWN,
+                winnerBallotId
+        );
+        LotteryEvent closedLottery = new LotteryEvent(
+                UUID.randomUUID().toString(),
+                testDate.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                testDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant(),
+                LotteryStatus.CLOSED,
+                null
+        );
+        List<LotteryEvent> lotteriesForDate = Arrays.asList(closedLottery, drawnLottery);
+        when(jsonLotteryEventRepository.findLotteryEventByDate(testDate)).thenReturn(lotteriesForDate);
+
+       List<LotteryEvent> resultList = lotteryEventService.findDrawnLotteriesByDate(testDate);
+
+        // Then
+        assertNotNull(resultList);
+        assertEquals(List.of(drawnLottery), resultList);
+        verify(jsonLotteryEventRepository, times(1)).findLotteryEventByDate(testDate);
+    }
+
 
 }

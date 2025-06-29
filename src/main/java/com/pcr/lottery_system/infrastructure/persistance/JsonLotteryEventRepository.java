@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,5 +84,10 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
             System.err.println("Error finding lottery events by status: " + status + " - " + e.getMessage());
             throw new RuntimeException("Persistence error finding lottery events by status", e);
         }
+    }
+
+    @Override
+    public List<LotteryEvent> findLotteryEventByDate(LocalDate date) {
+        return List.of();
     }
 }

@@ -56,9 +56,9 @@ public class LotteryEventController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/drawn/{lotteryDay}")
-    public ResponseEntity<List<LotteryEventResponse>> getDrawnLotteriesForADay(@PathVariable LocalDate lotteryDay) {
-            List<LotteryEvent> drawnLotteries = lotteryEventService.findDrawnLotteriesByDate(lotteryDay);
+    @GetMapping("/drawn/{lotteryClosureDay}")
+    public ResponseEntity<List<LotteryEventResponse>> getDrawnLotteriesForADay(@PathVariable LocalDate lotteryClosureDay) {
+            List<LotteryEvent> drawnLotteries = lotteryEventService.findDrawnLotteriesByDate(lotteryClosureDay);
 
             List<LotteryEventResponse> response = drawnLotteries.stream()
                     .map(this::mapToLotteryEventResponse)

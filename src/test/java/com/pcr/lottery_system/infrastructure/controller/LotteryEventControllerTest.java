@@ -100,9 +100,9 @@ class LotteryEventControllerTest {
         LotteryEventResponse response2 = new LotteryEventResponse(lotteryId2, startTime2, endTime2, LotteryStatus.DRAWN, "winnerBallot2");
         List<LotteryEventResponse> expectedResponses = List.of(response2);
 
-        ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now().minusDays(4));
+        ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now().minusDays(3));
 
-        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now().minusDays(4));
+        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now().minusDays(3));
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
