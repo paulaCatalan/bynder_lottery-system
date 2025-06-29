@@ -36,6 +36,9 @@ _Remember that you can only register a participant if the email has not been reg
 
 It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/open
 
+### Retrieve DRAWN lotteries by date (end date of lottery)
+It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/drawn/{yyyy-mm-dd}
+
 ## Other resources related to this development
 
 ### Diagrams and organization
