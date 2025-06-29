@@ -9,16 +9,20 @@ import com.pcr.lottery_system.infrastructure.persistance.JsonLotteryEventReposit
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 class LotteryEventServiceTest {
     @Mock
@@ -65,7 +69,53 @@ class LotteryEventServiceTest {
         verify(jsonLotteryEventRepository).save(drawnLotteryEvent);
     }
 
-    //TODO: Add test with more than one eligible ballot
+    @Test
+    void shouldCloseOpenLotteryEventsAndDrawAWinnerFromMultipleBallots() {
+        String lotteryId = UUID.randomUUID().toString();
+        LotteryEvent openLotteryEvent = LotteryEvent.createLottery(
+                lotteryId,
+                Instant.now().minus(2, ChronoUnit.HOURS),
+                Instant.now().minus(1, ChronoUnit.HOURS)
+        );
+
+        String participantId1 = UUID.randomUUID().toString();
+        String participantId2 = UUID.randomUUID().toString();
+
+        Ballot ballot1 = new Ballot("ballot1", participantId1, lotteryId);
+        Ballot ballot2 = new Ballot("ballot2", participantId1, lotteryId);
+        Ballot ballot3 = new Ballot("ballot3", participantId2, lotteryId);
+
+        List<Ballot> allBallots = Arrays.asList(ballot1, ballot2, ballot3);
+        List<String> allBallotIds = Arrays.asList(ballot1.ballotId(), ballot2.ballotId(), ballot3.ballotId());
+
+
+        when(jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN)).thenReturn(List.of(openLotteryEvent));
+        when(jsonLotteryEventRepository.findLotteryEventById(lotteryId)).thenReturn(openLotteryEvent);
+        when(jsonBallotRepository.findAllBallotsOfALottery(lotteryId)).thenReturn(allBallots);
+
+        lotteryEventService.closeLotteryEventsAtMidnight();
+
+        verify(jsonLotteryEventRepository, times(1)).findLotteryEventByStatus(LotteryStatus.OPEN);
+        verify(jsonBallotRepository, times(1)).findAllBallotsOfALottery(lotteryId);
+
+        ArgumentCaptor<LotteryEvent> lotteryEventCaptor = ArgumentCaptor.forClass(LotteryEvent.class);
+        verify(jsonLotteryEventRepository, times(2)).save(lotteryEventCaptor.capture());
+
+        List<LotteryEvent> savedLotteries = lotteryEventCaptor.getAllValues();
+        assertEquals(2, savedLotteries.size());
+
+        LotteryEvent firstSave = savedLotteries.get(0);
+        assertEquals(lotteryId, firstSave.id());
+        assertEquals(LotteryStatus.CLOSED, firstSave.status());
+        assertNull(firstSave.winnerBallotId());
+
+        LotteryEvent secondSave = savedLotteries.get(1);
+        assertEquals(lotteryId, secondSave.id());
+        assertEquals(LotteryStatus.DRAWN, secondSave.status());
+        assertNotNull(secondSave.winnerBallotId());
+        assertTrue(allBallotIds.contains(secondSave.winnerBallotId()),
+                "Winning ballot ID should be one of the provided ballot IDs.");
+    }
 
     @Test
     void shouldKeepLotteryInClosedStateIfThereAreNoBallotsToWin(){
@@ -113,8 +163,8 @@ class LotteryEventServiceTest {
 
         verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
         verify(jsonBallotRepository).save(ballot);
-        Assertions.assertEquals(ballot.participantId(), command.participantId());
-        Assertions.assertEquals(ballot.lotteryId(), command.lotteryId());
+        assertEquals(ballot.participantId(), command.participantId());
+        assertEquals(ballot.lotteryId(), command.lotteryId());
         Assertions.assertNotNull(ballot.ballotId());
     }
 
@@ -134,7 +184,7 @@ class LotteryEventServiceTest {
 
         verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
         verify(jsonBallotRepository, never()).save(ballot);
-        Assertions.assertNull(ballot);
+        assertNull(ballot);
     }
 
 }
