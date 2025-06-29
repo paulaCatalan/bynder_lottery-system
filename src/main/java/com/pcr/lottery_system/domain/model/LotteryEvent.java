@@ -38,6 +38,10 @@ public record LotteryEvent(
     }
 
     public LotteryEvent close() {
-        return new LotteryEvent(this.id, this.startTime, this.endTime, LotteryStatus.CLOSED, this.winnerBallotId);
+        return new LotteryEvent(this.id, this.startTime, this.endTime, LotteryStatus.CLOSED, null);
+    }
+
+    public LotteryEvent drawWinner(String winnerBallotId){
+        return new LotteryEvent(this.id, this.startTime, this.endTime, LotteryStatus.DRAWN, winnerBallotId);
     }
 }

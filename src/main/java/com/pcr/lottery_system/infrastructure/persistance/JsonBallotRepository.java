@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Repository
 public class JsonBallotRepository implements BallotRepository {
@@ -58,6 +60,19 @@ public class JsonBallotRepository implements BallotRepository {
         } catch (IOException e) {
             System.err.println("Error saving ballot: " + ballot.ballotId() + " - " + e.getMessage());
             throw new RuntimeException("Persistence error saving ballot", e);
+        }
+    }
+    @Override
+    public List<Ballot> findAllBallotsOfALottery(String lotteryEventId) {
+        try {
+            List<BallotJson> allBallots = jsonFileHandler.readFromFile(ballotsFile, BallotListWrapper.class);
+            return allBallots.stream()
+                    .filter(ballotJson -> Objects.equals(ballotJson.lotteryEventId(), lotteryEventId))
+                    .map(ballotConverter::toDomain)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            System.err.println("Error ballots not found for the lottery Id: " + lotteryEventId + " - " + e.getMessage());
+            throw new RuntimeException("Persistence error finding lottery events by status", e);
         }
     }
 }

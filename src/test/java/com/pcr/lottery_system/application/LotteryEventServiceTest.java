@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-
 class LotteryEventServiceTest {
     @Mock
     JsonLotteryEventRepository jsonLotteryEventRepository;
@@ -43,20 +42,48 @@ class LotteryEventServiceTest {
     }
 
     @Test
-    void shouldCloseOpenLotteryEventsAtMidnight(){
+    void shouldCloseOpenLotteryEventsAtMidnightAndDrawAWinnerBallot(){
         LotteryEvent openLotteryEvent = LotteryEvent.createLottery(
                 "testId",
                 Instant.now(),
                 Instant.now().plus(15, ChronoUnit.HOURS)
         );
         LotteryEvent closedLotteryEvent = openLotteryEvent.close();
+        LotteryEvent drawnLotteryEvent = closedLotteryEvent.drawWinner("ballotId");
 
         when(jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN)).thenReturn(List.of(openLotteryEvent));
+        when(jsonBallotRepository.findAllBallotsOfALottery("testId")).thenReturn(
+                List.of(
+                        new Ballot("ballotId", "testId", "participantId"))
+        );
 
         lotteryEventService.closeLotteryEventsAtMidnight();
 
         verify(jsonLotteryEventRepository).findLotteryEventByStatus(LotteryStatus.OPEN);
+        verify(jsonBallotRepository).findAllBallotsOfALottery("testId");
         verify(jsonLotteryEventRepository).save(closedLotteryEvent);
+        verify(jsonLotteryEventRepository).save(drawnLotteryEvent);
+    }
+
+    //TODO: Add test with more than one eligible ballot
+
+    @Test
+    void shouldKeepLotteryInClosedStateIfThereAreNoBallotsToWin(){
+        LotteryEvent openLotteryEvent = LotteryEvent.createLottery(
+                "testId",
+                Instant.now(),
+                Instant.now().plus(15, ChronoUnit.HOURS)
+        );
+        LotteryEvent closedLotteryEvent = openLotteryEvent.close();
+        LotteryEvent drawnLotteryEvent = closedLotteryEvent.drawWinner("ballotId");
+        when(jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN)).thenReturn(List.of(openLotteryEvent));
+        when(jsonBallotRepository.findAllBallotsOfALottery("testId")).thenReturn(List.of());
+
+        lotteryEventService.closeLotteryEventsAtMidnight();
+
+        verify(jsonLotteryEventRepository).save(closedLotteryEvent);
+        verify(jsonLotteryEventRepository, never()).save(drawnLotteryEvent);
+
     }
 
     @Test
@@ -102,10 +129,11 @@ class LotteryEventServiceTest {
                 null
         );
         when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
-        //Call ballot repository to save new ballot
+
         Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
 
         verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
+        verify(jsonBallotRepository, never()).save(ballot);
         Assertions.assertNull(ballot);
     }
 

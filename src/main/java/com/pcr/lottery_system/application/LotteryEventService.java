@@ -13,12 +13,15 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
 public class LotteryEventService {
     private final LotteryEventRepository lotteryEventRepository;
     private final BallotRepository ballotRepository;
+    private final Random random = new Random();
+
 
     public LotteryEventService(
             LotteryEventRepository lotteryEventRepository,
@@ -55,12 +58,18 @@ public class LotteryEventService {
         System.out.println("Attempting to open lottery events...");
 
         List<LotteryEvent> openLotteries = lotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
-        //Handle open lotteries being empty list with TDD
         System.out.println("Found " + openLotteries.size() + " OPEN lottery events to close.");
         if (openLotteries != null && !openLotteries.isEmpty()) {
-            for (LotteryEvent openLottery : openLotteries) {
-                LotteryEvent closedLottery = openLottery.close();
+            for (LotteryEvent lotteryEvent : openLotteries) {
+                LotteryEvent closedLottery = lotteryEvent.close();
                 lotteryEventRepository.save(closedLottery);
+
+                Ballot winningBallot = selectWinnerForLottery(lotteryEvent.id());
+
+                if (winningBallot != null) {
+                    LotteryEvent drawnLotteryEvent = closedLottery.drawWinner(winningBallot.ballotId());
+                    lotteryEventRepository.save(drawnLotteryEvent);
+                }
             }
         }
     }
@@ -82,5 +91,14 @@ public class LotteryEventService {
             return newBallot;
         }
         return null;
+    }
+
+    private Ballot selectWinnerForLottery(String lotteryId){
+        List<Ballot> allBallotsForLottery = ballotRepository.findAllBallotsOfALottery(lotteryId);
+        if (allBallotsForLottery.isEmpty()) {
+            System.out.println("No ballots found for lottery event ID " + lotteryId + ". Cannot draw a winner for this lottery.");
+            return null;
+        }
+        return allBallotsForLottery.get(random.nextInt(allBallotsForLottery.size()));
     }
 }
