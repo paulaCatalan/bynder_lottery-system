@@ -94,7 +94,7 @@ class LotteryEventControllerTest {
         Instant endTime2 = Instant.now().minus(3, ChronoUnit.DAYS);
         LotteryEvent lotteryEvent2 = new LotteryEvent(lotteryId2, startTime2, endTime2, LotteryStatus.DRAWN, "winnerBallot2");
 
-        when(lotteryEventService.findDrawnLotteriesByDate(LocalDate.now().minusDays(4)))
+        when(lotteryEventService.findDrawnLotteriesByEndLotteryDate(LocalDate.now().minusDays(3)))
                 .thenReturn(List.of(lotteryEvent2));
 
         LotteryEventResponse response2 = new LotteryEventResponse(lotteryId2, startTime2, endTime2, LotteryStatus.DRAWN, "winnerBallot2");
@@ -102,7 +102,7 @@ class LotteryEventControllerTest {
 
         ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now().minusDays(3));
 
-        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now().minusDays(3));
+        verify(lotteryEventService, times(1)).findDrawnLotteriesByEndLotteryDate(LocalDate.now().minusDays(3));
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
@@ -113,12 +113,12 @@ class LotteryEventControllerTest {
 
     @Test
     void shouldReturnEmptyListWhenNoDrawnLotteriesForADate() {
-        when(lotteryEventService.findDrawnLotteriesByDate(LocalDate.now().minusDays(4)))
+        when(lotteryEventService.findDrawnLotteriesByEndLotteryDate(LocalDate.now().minusDays(4)))
                 .thenReturn(List.of());
 
         ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now());
 
-        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now());
+        verify(lotteryEventService, times(1)).findDrawnLotteriesByEndLotteryDate(LocalDate.now());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
         assertEquals(0, responseEntity.getBody().size());

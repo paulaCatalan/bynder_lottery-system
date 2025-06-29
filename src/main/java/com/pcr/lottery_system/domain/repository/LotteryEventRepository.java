@@ -10,5 +10,5 @@ public interface LotteryEventRepository {
     void save(LotteryEvent lotteryEvent);
     LotteryEvent findLotteryEventById(String lotteryEventId);
     List<LotteryEvent> findLotteryEventByStatus(LotteryStatus status);
-    List<LotteryEvent> findLotteryEventByDate(LocalDate date);
+    List<LotteryEvent> findLotteryEventByEndLotteryDate(LocalDate date);
 }

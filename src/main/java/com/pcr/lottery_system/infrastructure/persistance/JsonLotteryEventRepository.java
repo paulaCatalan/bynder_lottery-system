@@ -87,7 +87,7 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
     }
 
     @Override
-    public List<LotteryEvent> findLotteryEventByDate(LocalDate date) {
+    public List<LotteryEvent> findLotteryEventByEndLotteryDate(LocalDate date) {
         return List.of();
     }
 }

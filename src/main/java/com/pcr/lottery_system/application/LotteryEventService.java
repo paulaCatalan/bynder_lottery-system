@@ -103,8 +103,8 @@ public class LotteryEventService {
         return allBallotsForLottery.get(random.nextInt(allBallotsForLottery.size()));
     }
 
-    public List<LotteryEvent> findDrawnLotteriesByDate(LocalDate date) {
-        return lotteryEventRepository.findLotteryEventByDate(date)
+    public List<LotteryEvent> findDrawnLotteriesByEndLotteryDate(LocalDate date) {
+        return lotteryEventRepository.findLotteryEventByEndLotteryDate(date)
                 .stream().filter(lotteryEvent -> lotteryEvent.status() == LotteryStatus.DRAWN).toList();
     }
 }

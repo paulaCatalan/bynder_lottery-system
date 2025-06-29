@@ -209,14 +209,14 @@ class LotteryEventServiceTest {
                 null
         );
         List<LotteryEvent> lotteriesForDate = Arrays.asList(closedLottery, drawnLottery);
-        when(jsonLotteryEventRepository.findLotteryEventByDate(testDate)).thenReturn(lotteriesForDate);
+        when(jsonLotteryEventRepository.findLotteryEventByEndLotteryDate(testDate)).thenReturn(lotteriesForDate);
 
-       List<LotteryEvent> resultList = lotteryEventService.findDrawnLotteriesByDate(testDate);
+       List<LotteryEvent> resultList = lotteryEventService.findDrawnLotteriesByEndLotteryDate(testDate);
 
         // Then
         assertNotNull(resultList);
         assertEquals(List.of(drawnLottery), resultList);
-        verify(jsonLotteryEventRepository, times(1)).findLotteryEventByDate(testDate);
+        verify(jsonLotteryEventRepository, times(1)).findLotteryEventByEndLotteryDate(testDate);
     }
 
 
