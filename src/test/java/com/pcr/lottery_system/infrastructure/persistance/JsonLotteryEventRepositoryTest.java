@@ -18,9 +18,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -128,6 +129,77 @@ class JsonLotteryEventRepositoryTest {
         List<LotteryEvent> openLotteryEventsFound = jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
 
         Assertions.assertEquals(expectedOpenLotteryEventsList, openLotteryEventsFound);
+    }
+
+    @Test
+    void shouldFindLotteryEventsByEndDate() {
+        LocalDate testDate = LocalDate.now();
+        Instant endOfDay = testDate.atTime(23, 59, 59).atOffset(ZoneOffset.UTC).toInstant();
+        String id1 = UUID.randomUUID().toString();
+        LotteryEventJson eventJson1 = new LotteryEventJson(
+                id1,
+                testDate.atStartOfDay().atOffset(ZoneOffset.UTC).toInstant().toString(),
+                endOfDay.toString(),
+                LotteryStatus.DRAWN,
+                UUID.randomUUID().toString()
+        );
+        LotteryEvent domainEvent1 = new LotteryEvent(
+                id1,
+                Instant.parse(eventJson1.startTime()),
+                Instant.parse(eventJson1.endTime()),
+                LotteryStatus.DRAWN,
+                eventJson1.winnerBallotId()
+        );
+
+        String id2 = UUID.randomUUID().toString();
+        LotteryEventJson eventJson2 = new LotteryEventJson(
+                id2,
+                testDate.minusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC).toInstant().toString(),
+                testDate.minusDays(1).atTime(23, 59, 59).atOffset(ZoneOffset.UTC).toInstant().toString(), // Ends on previous day
+                LotteryStatus.CLOSED,
+                null
+        );
+        LotteryEvent domainEvent2 = new LotteryEvent(
+                id2,
+                Instant.parse(eventJson2.startTime()),
+                Instant.parse(eventJson2.endTime()),
+                LotteryStatus.CLOSED,
+                null
+        );
+
+        String id3 = UUID.randomUUID().toString();
+        LotteryEventJson eventJson3 = new LotteryEventJson(
+                id3,
+                testDate.atStartOfDay().atOffset(ZoneOffset.UTC).toInstant().toString(),
+                endOfDay.toString(),
+                LotteryStatus.OPEN,
+                null
+        );
+        LotteryEvent domainEvent3 = new LotteryEvent(
+                id3,
+                Instant.parse(eventJson3.startTime()),
+                Instant.parse(eventJson3.endTime()),
+                LotteryStatus.OPEN,
+                null
+        );
+
+
+        simulatedFileContent.add(eventJson1);
+        simulatedFileContent.add(eventJson2);
+        simulatedFileContent.add(eventJson3);
+
+        when(mockedConverter.toDomain(eventJson1)).thenReturn(domainEvent1);
+        when(mockedConverter.toDomain(eventJson2)).thenReturn(domainEvent2);
+        when(mockedConverter.toDomain(eventJson3)).thenReturn(domainEvent3);
+
+        List<LotteryEvent> expectedEvents = Arrays.asList(domainEvent1, domainEvent3);
+
+        List<LotteryEvent> foundEvents = jsonLotteryEventRepository.findLotteryEventByEndLotteryDate(testDate);
+
+        Assertions.assertNotNull(foundEvents);
+        Assertions.assertEquals(expectedEvents.size(), foundEvents.size());
+        Assertions.assertTrue(foundEvents.containsAll(expectedEvents));
+        Assertions.assertTrue(expectedEvents.containsAll(foundEvents));
     }
 
     @Test

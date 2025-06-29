@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,15 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
 
     @Override
     public List<LotteryEvent> findLotteryEventByEndLotteryDate(LocalDate date) {
-        return List.of();
+        try {
+            List<LotteryEventJson> allEvents = jsonFileHandler.readFromFile(lotteryEventsFile, LotteryEventListWrapper.class);
+            return allEvents.stream()
+                    .map(converter::toDomain)
+                    .filter(event -> event.endTime().atOffset(ZoneOffset.UTC).toLocalDate().equals(date))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            System.err.println("Error finding lottery events by end date: " + date + " - " + e.getMessage());
+            throw new RuntimeException("Persistence error finding lottery events by end date", e);
+        }
     }
 }
