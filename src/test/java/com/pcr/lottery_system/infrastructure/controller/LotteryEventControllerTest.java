@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
@@ -80,6 +81,44 @@ class LotteryEventControllerTest {
         ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getOpenLotteries();
 
         verify(lotteryEventService, times(1)).findLotteryEventsByStatus(LotteryStatus.OPEN);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+        assertEquals(0, responseEntity.getBody().size());
+        assertEquals(List.of(), responseEntity.getBody());
+    }
+
+    @Test
+    void shouldReturnDrawnLotteriesForAParticularDate() {
+        String lotteryId2 = UUID.randomUUID().toString();
+        Instant startTime2 = Instant.now().minus(4, ChronoUnit.DAYS);
+        Instant endTime2 = Instant.now().minus(3, ChronoUnit.DAYS);
+        LotteryEvent lotteryEvent2 = new LotteryEvent(lotteryId2, startTime2, endTime2, LotteryStatus.DRAWN, "winnerBallot2");
+
+        when(lotteryEventService.findDrawnLotteriesByDate(LocalDate.now().minusDays(4)))
+                .thenReturn(List.of(lotteryEvent2));
+
+        LotteryEventResponse response2 = new LotteryEventResponse(lotteryId2, startTime2, endTime2, LotteryStatus.DRAWN, "winnerBallot2");
+        List<LotteryEventResponse> expectedResponses = List.of(response2);
+
+        ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now().minusDays(4));
+
+        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now().minusDays(4));
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        assertNotNull(responseEntity.getBody());
+        assertEquals(expectedResponses.size(), responseEntity.getBody().size());
+        assertEquals(expectedResponses, responseEntity.getBody());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoDrawnLotteriesForADate() {
+        when(lotteryEventService.findDrawnLotteriesByDate(LocalDate.now().minusDays(4)))
+                .thenReturn(List.of());
+
+        ResponseEntity<List<LotteryEventResponse>> responseEntity = lotteryEventController.getDrawnLotteriesForADay(LocalDate.now());
+
+        verify(lotteryEventService, times(1)).findDrawnLotteriesByDate(LocalDate.now());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
         assertEquals(0, responseEntity.getBody().size());

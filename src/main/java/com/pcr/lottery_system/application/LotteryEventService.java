@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -100,5 +101,17 @@ public class LotteryEventService {
             return null;
         }
         return allBallotsForLottery.get(random.nextInt(allBallotsForLottery.size()));
+    }
+
+    public List<LotteryEvent> findDrawnLotteriesByDate(LocalDate date) {
+//        LotteryEvent lotteryEvent = lotteryEventRepository.findByDate(date);
+//        if (lotteryEvent == null) {
+//            throw new LotteryNotFoundException(date);
+//        }
+//        if (lotteryEvent.status() != LotteryStatus.DRAWN) {
+//            throw new InvalidLotteryEventStatusException("Lottery for date " + date + " is not yet DRAWN. Current status: " + lotteryEvent.status() + ".");
+//        }
+//        return lotteryEvent;
+        return List.of();
     }
 }

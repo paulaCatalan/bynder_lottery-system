@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,19 @@ public class LotteryEventController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/drawn/{lotteryDay}")
+    public ResponseEntity<List<LotteryEventResponse>> getDrawnLotteriesForADay(@PathVariable LocalDate lotteryDay) {
+            List<LotteryEvent> drawnLotteries = lotteryEventService.findDrawnLotteriesByDate(lotteryDay);
+
+            List<LotteryEventResponse> response = drawnLotteries.stream()
+                    .map(this::mapToLotteryEventResponse)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
+    }
+
+
 
     private LotteryEventResponse mapToLotteryEventResponse(LotteryEvent lotteryEvent) {
         return new LotteryEventResponse(
