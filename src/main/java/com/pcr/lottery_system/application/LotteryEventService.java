@@ -64,6 +64,17 @@ public class LotteryEventService {
     }
 
     public Ballot participateInLotteryEvent(ParticipateInLotteryCommand participateInLotteryCommand) {
-        return new Ballot("", "", "");
+        LotteryEvent lotteryEvent = lotteryEventRepository.findLotteryEventById(participateInLotteryCommand.lotteryId());
+        if (lotteryEvent.status() == LotteryStatus.OPEN) {
+            String newBallotId = UUID.randomUUID().toString();
+            Ballot newBallot = new Ballot(
+                    newBallotId,
+                    participateInLotteryCommand.lotteryId(),
+                    participateInLotteryCommand.participantId()
+            );
+            // Call repository to save the new ballot
+            return newBallot;
+        }
+        return null;
     }
 }

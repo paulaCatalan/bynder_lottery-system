@@ -1,8 +1,11 @@
 package com.pcr.lottery_system.application;
 
+import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
+import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
 import com.pcr.lottery_system.infrastructure.persistance.JsonLotteryEventRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -62,6 +65,44 @@ class LotteryEventServiceTest {
         verify(jsonLotteryEventRepository).findLotteryEventByStatus(LotteryStatus.OPEN);
         verify(jsonLotteryEventRepository, never()).save(any());
 
+    }
+
+    @Test
+    void shouldSubmitParticipationInOpenLotteriesAndReturnNewBallot(){
+        ParticipateInLotteryCommand command = new ParticipateInLotteryCommand("lotteryId", "participantId");
+        LotteryEvent lotteryEvent = new LotteryEvent(
+                "lotteryId",
+                Instant.now().minus(15, ChronoUnit.MINUTES),
+                Instant.now().plus(14, ChronoUnit.HOURS),
+                LotteryStatus.OPEN,
+                null
+                );
+        when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
+        //Call ballot repository to save new ballot
+        Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
+
+        verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
+        Assertions.assertEquals(ballot.participantId(), command.participantId());
+        Assertions.assertEquals(ballot.lotteryId(), command.lotteryId());
+        Assertions.assertNotNull(ballot.ballotId());
+    }
+
+    @Test
+    void shouldNotSubmitParticipationInLotteriesThatAreNotOpenAndReturnNull(){
+        ParticipateInLotteryCommand command = new ParticipateInLotteryCommand("lotteryId", "participantId");
+        LotteryEvent lotteryEvent = new LotteryEvent(
+                "lotteryId",
+                Instant.now().minus(15, ChronoUnit.MINUTES),
+                Instant.now().plus(14, ChronoUnit.HOURS),
+                LotteryStatus.CLOSED,
+                null
+        );
+        when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
+        //Call ballot repository to save new ballot
+        Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
+
+        verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
+        Assertions.assertNull(ballot);
     }
 
 }
