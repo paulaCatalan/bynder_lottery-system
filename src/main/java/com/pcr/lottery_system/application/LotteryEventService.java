@@ -3,6 +3,7 @@ package com.pcr.lottery_system.application;
 import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
+import com.pcr.lottery_system.domain.repository.BallotRepository;
 import com.pcr.lottery_system.domain.repository.LotteryEventRepository;
 import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,9 +18,14 @@ import java.util.UUID;
 @Service
 public class LotteryEventService {
     private final LotteryEventRepository lotteryEventRepository;
+    private final BallotRepository ballotRepository;
 
-    public LotteryEventService(LotteryEventRepository lotteryEventRepository) {
+    public LotteryEventService(
+            LotteryEventRepository lotteryEventRepository,
+            BallotRepository ballotRepository
+    ) {
         this.lotteryEventRepository = lotteryEventRepository;
+        this.ballotRepository = ballotRepository;
     }
 
     @Scheduled(cron = "0 0 9 * * *")
@@ -72,7 +78,7 @@ public class LotteryEventService {
                     participateInLotteryCommand.lotteryId(),
                     participateInLotteryCommand.participantId()
             );
-            // Call repository to save the new ballot
+            ballotRepository.save(newBallot);
             return newBallot;
         }
         return null;

@@ -3,6 +3,7 @@ package com.pcr.lottery_system.infrastructure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.pcr.lottery_system.infrastructure.dto.BallotJson;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -36,7 +37,10 @@ public class DefaultJsonFileHandler<T, W> implements JsonFileHandler<T, W> {
                     return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.ParticipantListWrapper) wrapper).getParticipants();
                 } else if (wrapper instanceof com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper) {
                     return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper) wrapper).getLotteryEvents();
-                  }
+                } else if (wrapper instanceof com.pcr.lottery_system.infrastructure.dto.BallotListWrapper) {
+                    return (List<T>) ((com.pcr.lottery_system.infrastructure.dto.BallotListWrapper) wrapper).getBallots();
+                    }
+
                 throw new IllegalArgumentException("Unsupported wrapper type for readFromFile: " + wrapperClass.getName());
 
             } catch (MismatchedInputException e) {
@@ -63,6 +67,10 @@ public class DefaultJsonFileHandler<T, W> implements JsonFileHandler<T, W> {
                     com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper lotteryEventsWrapper = new com.pcr.lottery_system.infrastructure.dto.LotteryEventListWrapper();
                     lotteryEventsWrapper.setLotteryEvents((List<com.pcr.lottery_system.infrastructure.dto.LotteryEventJson>) dataList);
                     wrapper = (W) lotteryEventsWrapper;
+                } else if (wrapperClass == com.pcr.lottery_system.infrastructure.dto.BallotListWrapper.class) {
+                    com.pcr.lottery_system.infrastructure.dto.BallotListWrapper ballotListWrapper = new com.pcr.lottery_system.infrastructure.dto.BallotListWrapper();
+                    ballotListWrapper.setBallots((List<BallotJson>) dataList);
+                    wrapper = (W) ballotListWrapper;
                 } else {
                     throw new IllegalArgumentException("Unsupported wrapper type for writeToFile: " + wrapperClass.getName());
                 }

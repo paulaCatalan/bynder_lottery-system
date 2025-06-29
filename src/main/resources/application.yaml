@@ -9,3 +9,7 @@ participants:
 lottery_events:
   file:
     path: src/main/resources/lottery_events.json
+
+ballots:
+  file:
+    path: src/main/resources/submitted_ballots.json

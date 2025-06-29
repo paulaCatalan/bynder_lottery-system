@@ -4,6 +4,7 @@ import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
 import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
+import com.pcr.lottery_system.infrastructure.persistance.JsonBallotRepository;
 import com.pcr.lottery_system.infrastructure.persistance.JsonLotteryEventRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,12 +25,15 @@ class LotteryEventServiceTest {
     @Mock
     JsonLotteryEventRepository jsonLotteryEventRepository;
 
+    @Mock
+    JsonBallotRepository jsonBallotRepository;
+
     LotteryEventService lotteryEventService;
 
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
-        lotteryEventService = new LotteryEventService(jsonLotteryEventRepository);
+        lotteryEventService = new LotteryEventService(jsonLotteryEventRepository, jsonBallotRepository);
     }
 
     @Test
@@ -78,10 +82,10 @@ class LotteryEventServiceTest {
                 null
                 );
         when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
-        //Call ballot repository to save new ballot
         Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
 
         verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
+        verify(jsonBallotRepository).save(ballot);
         Assertions.assertEquals(ballot.participantId(), command.participantId());
         Assertions.assertEquals(ballot.lotteryId(), command.lotteryId());
         Assertions.assertNotNull(ballot.ballotId());
