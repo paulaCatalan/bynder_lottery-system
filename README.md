@@ -21,6 +21,8 @@ The server will be started in port 8080 (http://localhost:8080/)
 
 ## System functionalities
 
+_💡Pre-populated json files have been added so the functionality is easier to test on clone._
+
 ### User registration
 
 It can be done via cURL (POST) in  http://localhost:8080/api/participant/register
