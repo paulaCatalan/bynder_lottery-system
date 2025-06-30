@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -73,6 +74,15 @@ public class JsonBallotRepository implements BallotRepository {
         } catch (IOException e) {
             System.err.println("Error ballots not found for the lottery Id: " + lotteryEventId + " - " + e.getMessage());
             throw new RuntimeException("Persistence error finding lottery events by status", e);
+        }
+    }
+
+    public void clearFile() {
+        try {
+            jsonFileHandler.writeToFile(ballotsFile, Collections.emptyList(), BallotListWrapper.class);
+        } catch (IOException e) {
+            System.err.println("Error clearing ballots JSON file: " + e.getMessage());
+            throw new RuntimeException("Failed to clear JSON file for ballots", e);
         }
     }
 }

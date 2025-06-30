@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,6 +108,14 @@ public class JsonLotteryEventRepository implements LotteryEventRepository {
         } catch (IOException e) {
             System.err.println("Error finding lottery events by end date: " + date + " - " + e.getMessage());
             throw new RuntimeException("Persistence error finding lottery events by end date", e);
+        }
+    }
+    public void clearFile() {
+        try {
+            jsonFileHandler.writeToFile(lotteryEventsFile, Collections.emptyList(), LotteryEventListWrapper.class);
+        } catch (IOException e) {
+            System.err.println("Error clearing ballots JSON file: " + e.getMessage());
+            throw new RuntimeException("Failed to clear JSON file for ballots", e);
         }
     }
 }

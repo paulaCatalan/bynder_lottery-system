@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -67,6 +68,15 @@ public class JsonParticipantRepository implements ParticipantRepository{
         } catch (IOException e) {
             System.err.println("Error saving participant: " + participant.participantId() + " - " + e.getMessage());
             throw new RuntimeException("Persistence error saving participant", e);
+        }
+    }
+
+    public void clearFile() {
+        try {
+            jsonFileHandler.writeToFile(participantsFile, Collections.emptyList(), ParticipantListWrapper.class);
+        } catch (IOException e) {
+            System.err.println("Error clearing ballots JSON file: " + e.getMessage());
+            throw new RuntimeException("Failed to clear JSON file for ballots", e);
         }
     }
 }
