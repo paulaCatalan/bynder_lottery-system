@@ -22,14 +22,27 @@ public class ParticipantController {
 
     @PostMapping("/register")
     ResponseEntity<ParticipantRegistrationResponse> registerParticipant(@RequestBody ParticipantRegistrationRequest request) {
-        RegisterParticipantCommand command = new RegisterParticipantCommand(request.email(), request.name());
-        String participantId = participantService.registerParticipant(command);
-        ParticipantRegistrationResponse response = new ParticipantRegistrationResponse(
-                participantId,
-                "Participant registered successfully"
+            try {
+                RegisterParticipantCommand command = new RegisterParticipantCommand(request.email(), request.name());
+                String participantId = participantService.registerParticipant(command);
+                ParticipantRegistrationResponse response = new ParticipantRegistrationResponse(
+                        participantId,
+                        "Participant registered successfully"
                 );
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            } catch (com.pcr.lottery_system.domain.exception.DuplicateParticipantEmailException e) {
+                ParticipantRegistrationResponse errorResponse = new ParticipantRegistrationResponse(
+                        null,
+                        e.getMessage()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            } catch (Exception e) {
+                System.err.println("An unexpected error occurred during participant registration: " + e.getMessage());
+                ParticipantRegistrationResponse errorResponse = new ParticipantRegistrationResponse(
+                        null,
+                        "An unexpected error occurred during registration."
+                );
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            }
+        }
     }
-
-}
