@@ -29,17 +29,27 @@ It can be done via cURL (POST) in  http://localhost:8080/api/participant/registe
 
 An example of cURL:
 
-`curl --json '{"name": "Maria", "email": "maria@example.com"}' http://localhost:8080/api/participant/register
+`
+curl --json '{"name": "Maria", "email": "maria@example.com"}' http://localhost:8080/api/participant/register
 `
 
 _Remember that you can only register a participant if the email has not been registered before_
 
-### Retrieve OPEN lotteries (that accept participation)
+### Retrieving OPEN lotteries (that accept participation)
 
 It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/open
 
-### Retrieve DRAWN lotteries by date (end date of lottery)
+### Retrieving DRAWN lotteries by date (end date of lottery)
 It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/drawn/{yyyy-mm-dd}
+
+### Participating in a lottery
+The lottery has to be open and the participant needs to be registered.
+
+It can be done via a cURL:
+
+`
+curl --json '{"lotteryId": "11111111-1111-1111-1111-111111111111", "participantId": "a1b2c3d4-e5f6-7890-1234-567890abcdef"}' http://localhost:8080/api/lotteries/participate
+`
 
 ### Lottery Opening and Closing (Automatic actions)
 
