@@ -40,7 +40,7 @@ public class LotteryEventService {
     }
 
     @Scheduled(cron = "0 0 9 * * *")
-    void startDailyLottery() {
+    public void startDailyLottery() {
         System.out.println("Attempting to start a new daily lottery event...");
 
         LocalDateTime now = LocalDateTime.now();
@@ -62,7 +62,7 @@ public class LotteryEventService {
     }
 
     @Scheduled(cron = "0 0 0 * * *")
-    void closeLotteryEventsAtMidnight() {
+    public void closeLotteryEventsAtMidnight() {
         System.out.println("Attempting to open lottery events...");
 
         List<LotteryEvent> openLotteries = lotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);

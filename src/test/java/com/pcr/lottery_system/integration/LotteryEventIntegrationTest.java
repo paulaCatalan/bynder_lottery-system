@@ -5,8 +5,10 @@ import com.pcr.lottery_system.LotterySystemApplication;
 import com.pcr.lottery_system.application.LotteryEventService;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
+import com.pcr.lottery_system.domain.model.Participant;
 import com.pcr.lottery_system.infrastructure.dto.LotteryParticipationRequest;
 import com.pcr.lottery_system.infrastructure.dto.ParticipantRegistrationRequest;
+import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
 import com.pcr.lottery_system.infrastructure.persistance.JsonBallotRepository;
 import com.pcr.lottery_system.infrastructure.persistance.JsonLotteryEventRepository;
 import com.pcr.lottery_system.infrastructure.persistance.JsonParticipantRepository;
@@ -24,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -222,6 +225,64 @@ class LotteryEventIntegrationTest {
 
         mockMvc.perform(get("/lotteries/drawn/" + closedDate.toString()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldStartDailyLotteryAutomatically() {
+        lotteryEventService.startDailyLottery();
+
+        List<LotteryEvent> openLotteries = jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN);
+        assertFalse(openLotteries.isEmpty());
+        assertEquals(1, openLotteries.size());
+        assertEquals(LotteryStatus.OPEN, openLotteries.get(0).status());
+        assertNotNull(openLotteries.get(0).startTime());
+        assertNotNull(openLotteries.get(0).endTime());
+    }
+
+    @Test
+    void shouldCloseLotteryAndDrawWinnerAutomatically() throws Exception {
+        LocalDate today = LocalDate.now();
+        UUID lotteryId = UUID.randomUUID();
+        LotteryEvent openLottery = LotteryEvent.createLottery(
+                lotteryId.toString(),
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                today.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
+        );
+        jsonLotteryEventRepository.save(openLottery);
+
+        UUID participantId1 = UUID.randomUUID();
+        UUID participantId2 = UUID.randomUUID();
+        jsonParticipantRepository.save(new Participant(participantId1.toString(), "p1@test.com", "Participant One"));
+        jsonParticipantRepository.save(new Participant(participantId2.toString(), "p2@test.com", "Participant Two"));
+
+        lotteryEventService.participateInLotteryEvent(new ParticipateInLotteryCommand(lotteryId.toString(), participantId1.toString()));
+        lotteryEventService.participateInLotteryEvent(new ParticipateInLotteryCommand(lotteryId.toString(), participantId2.toString()));
+
+        lotteryEventService.closeLotteryEventsAtMidnight();
+
+        LotteryEvent closedAndDrawnLottery = jsonLotteryEventRepository.findLotteryEventById(lotteryId.toString());
+        assertNotNull(closedAndDrawnLottery);
+        assertEquals(LotteryStatus.DRAWN, closedAndDrawnLottery.status());
+        assertNotNull(closedAndDrawnLottery.winnerBallotId());
+    }
+
+    @Test
+    void shouldCloseLotteryWithoutWinnerIfNoBallots() {
+        LocalDate today = LocalDate.now();
+        UUID lotteryId = UUID.randomUUID();
+        LotteryEvent openLottery = LotteryEvent.createLottery(
+                lotteryId.toString(),
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                today.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
+        );
+        jsonLotteryEventRepository.save(openLottery);
+
+        lotteryEventService.closeLotteryEventsAtMidnight();
+
+        LotteryEvent closedLottery = jsonLotteryEventRepository.findLotteryEventById(lotteryId.toString());
+        assertNotNull(closedLottery);
+        assertEquals(LotteryStatus.CLOSED, closedLottery.status());
+        assertNull(closedLottery.winnerBallotId());
     }
 
 }
