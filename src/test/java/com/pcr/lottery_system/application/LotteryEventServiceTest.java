@@ -1,8 +1,11 @@
 package com.pcr.lottery_system.application;
 
+import com.pcr.lottery_system.domain.exception.InvalidLotteryEventStatusException;
 import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.model.LotteryEvent;
 import com.pcr.lottery_system.domain.model.LotteryStatus;
+import com.pcr.lottery_system.domain.model.Participant;
+import com.pcr.lottery_system.domain.repository.ParticipantRepository;
 import com.pcr.lottery_system.infrastructure.dto.ParticipateInLotteryCommand;
 import com.pcr.lottery_system.infrastructure.persistance.JsonBallotRepository;
 import com.pcr.lottery_system.infrastructure.persistance.JsonLotteryEventRepository;
@@ -33,12 +36,15 @@ class LotteryEventServiceTest {
     @Mock
     JsonBallotRepository jsonBallotRepository;
 
+    @Mock
+    ParticipantRepository participantRepository;
+
     LotteryEventService lotteryEventService;
 
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
-        lotteryEventService = new LotteryEventService(jsonLotteryEventRepository, jsonBallotRepository);
+        lotteryEventService = new LotteryEventService(jsonLotteryEventRepository, jsonBallotRepository, participantRepository);
     }
 
     @Test
@@ -56,8 +62,10 @@ class LotteryEventServiceTest {
         );
         LotteryEvent closedLotteryEvent = openLotteryEvent.close();
         LotteryEvent drawnLotteryEvent = closedLotteryEvent.drawWinner("ballotId");
+        Participant participant = new Participant("participantId", "email", "Test");
 
         when(jsonLotteryEventRepository.findLotteryEventByStatus(LotteryStatus.OPEN)).thenReturn(List.of(openLotteryEvent));
+        when(participantRepository.findById("participantId")).thenReturn(participant);
         when(jsonBallotRepository.findAllBallotsOfALottery("testId")).thenReturn(
                 List.of(
                         new Ballot("ballotId", "testId", "participantId"))
@@ -160,7 +168,9 @@ class LotteryEventServiceTest {
                 LotteryStatus.OPEN,
                 null
                 );
+        Participant participant = new Participant("participantId", "email", "Participant");
         when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
+        when(participantRepository.findById("participantId")).thenReturn(participant);
         Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
 
         verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
@@ -171,22 +181,28 @@ class LotteryEventServiceTest {
     }
 
     @Test
-    void shouldNotSubmitParticipationInLotteriesThatAreNotOpenAndReturnNull(){
-        ParticipateInLotteryCommand command = new ParticipateInLotteryCommand("lotteryId", "participantId");
-        LotteryEvent lotteryEvent = new LotteryEvent(
-                "lotteryId",
+    void shouldNotSubmitParticipationInLotteriesThatAreNotOpenAndThrowException() {
+        UUID lotteryId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        LotteryEvent closedLotteryEvent = new LotteryEvent(
+                lotteryId.toString(),
                 Instant.now().minus(15, ChronoUnit.MINUTES),
                 Instant.now().plus(14, ChronoUnit.HOURS),
                 LotteryStatus.CLOSED,
                 null
         );
-        when(jsonLotteryEventRepository.findLotteryEventById("lotteryId")).thenReturn(lotteryEvent);
+        Participant participant = new Participant(participantId.toString(), "email@example.com", "Test Participant");
+        when(jsonLotteryEventRepository.findLotteryEventById(lotteryId.toString())).thenReturn(closedLotteryEvent);
+        when(participantRepository.findById(participantId.toString())).thenReturn(participant);
 
-        Ballot ballot = lotteryEventService.participateInLotteryEvent(command);
 
-        verify(jsonLotteryEventRepository).findLotteryEventById("lotteryId");
-        verify(jsonBallotRepository, never()).save(ballot);
-        assertNull(ballot);
+        ParticipateInLotteryCommand command =
+                new ParticipateInLotteryCommand(lotteryId.toString(), participantId.toString());
+
+        assertThrows(InvalidLotteryEventStatusException.class, () -> {
+            lotteryEventService.participateInLotteryEvent(command);
+        });
+        verify(jsonBallotRepository, never()).save(any(Ballot.class));
     }
 
     @Test

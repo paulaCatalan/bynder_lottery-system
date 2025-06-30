@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = LotterySystemApplication.class)
 @AutoConfigureMockMvc
-public class ParticipantIntegrationTests {
+public class ParticipantIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

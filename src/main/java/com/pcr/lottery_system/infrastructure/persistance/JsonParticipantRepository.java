@@ -58,6 +58,22 @@ public class JsonParticipantRepository implements ParticipantRepository{
     }
 
     @Override
+    public Participant findById(String participantId) {
+        try {
+            List<ParticipantJson> allParticipants = jsonFileHandler.readFromFile(participantsFile, ParticipantListWrapper.class);
+            for (ParticipantJson participantJson : allParticipants) {
+                if (participantJson.participant_id().equals(participantId)) {
+                    return converter.toDomain(participantJson);
+                }
+            }
+            return null;
+        } catch (IOException e) {
+            System.err.println("Error finding participant by email: " + participantId + " - " + e.getMessage());
+            throw new RuntimeException("Persistence error finding participant by email", e);
+        }
+    }
+
+    @Override
     public void save(Participant participant) {
         try {
             List<ParticipantJson> currentParticipants = jsonFileHandler.readFromFile(participantsFile, ParticipantListWrapper.class);
