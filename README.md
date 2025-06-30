@@ -41,6 +41,31 @@ It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/ope
 ### Retrieve DRAWN lotteries by date (end date of lottery)
 It can be done via GET in this endpoint: http://localhost:8080/api/lotteries/drawn/{yyyy-mm-dd}
 
+### Lottery Opening and Closing (Automatic actions)
+
+The Lottery System automates the lifecycle of daily lottery events through scheduled tasks:
+
+* **Lottery Opening:**
+
+    * A scheduled task runs daily at **9:00 AM (09:00:00)**.
+
+    * Its primary function is to create a new `OPEN` lottery event for the current day.
+
+
+* **Lottery Closing and Winner Drawing:**
+
+    * A separate scheduled task runs daily at **midnight (00:00:00)**.
+
+    * This task identifies *all* currently `OPEN` lottery events.
+
+    * It then proceeds to change the status of each of these `OPEN` lotteries to `CLOSED`.
+
+    * Immediately after closing, it attempts to **draw a winner** for each closed lottery.
+
+    * If there are submitted ballots, a random winner is selected, and the lottery status is updated to `DRAWN`.
+
+    * If there are no ballots submitted for a closed lottery, it remains in the `CLOSED` status with no winner.
+
 ## Other resources related to this development
 
 ### Diagrams and organization
