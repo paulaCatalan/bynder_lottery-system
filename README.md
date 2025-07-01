@@ -17,25 +17,21 @@ This application uses MongoDB for data persistence in production. A Docker Compo
 
 #### MongoDB Setup Commands
 
-**1. Start MongoDB database:**
+**Start MongoDB database:**
 ```bash
 docker-compose up -d mongodb
 ```
 
-**2. Stop MongoDB database:**
-```bash
-docker-compose down
-```
-
-**3. View MongoDB logs:**
+**View MongoDB logs:**
 ```bash
 docker logs lottery-mongodb
 ```
 
-**4. Connect to MongoDB shell (for debugging):**
+**Connect to MongoDB shell (for debugging):**
 ```bash
 docker exec -it lottery-mongodb mongosh mongodb://lottery_user:lottery_password@localhost:27017/lottery_system_db
 ```
+
 
 #### Database Configuration
 
@@ -77,33 +73,6 @@ docker-compose up -d mongodb
 `./gradlew bootRun`
 
 The server will be started in port 8080 (http://localhost:8080/)
-
-**To stop everything:**
-```bash
-# Stop the Spring Boot application (Ctrl+C in the terminal where it's running)
-# Stop MongoDB
-docker-compose down
-```
-
-#### Troubleshooting
-
-**MongoDB connection issues:**
-- Verify MongoDB is running: `docker ps` (should show `lottery-mongodb` container)
-- Check MongoDB logs: `docker logs lottery-mongodb`
-- Restart MongoDB: `docker-compose restart mongodb`
-
-**Clean slate setup:**
-```bash
-# Stop everything
-docker-compose down
-
-# Remove MongoDB data volume (⚠️ This will delete all data!)
-docker volume rm bynder_lottery-system-use-ddbb-for-persistance_mongo-data
-
-# Start fresh
-docker-compose up -d mongodb
-./gradlew bootRun
-```
 
 **View database contents:**
 ```bash
