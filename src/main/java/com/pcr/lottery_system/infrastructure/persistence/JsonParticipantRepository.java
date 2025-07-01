@@ -1,4 +1,4 @@
-package com.pcr.lottery_system.infrastructure.persistance;// --- Infrastructure Layer: Repository Implementation (JSON File-Based) ---
+package com.pcr.lottery_system.infrastructure.persistence;// --- Infrastructure Layer: Repository Implementation (JSON File-Based) ---
 
 import com.pcr.lottery_system.domain.model.Participant;
 import com.pcr.lottery_system.domain.repository.ParticipantRepository;

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pcr.lottery_system.LotterySystemApplication;
 import com.pcr.lottery_system.domain.model.Participant;
 import com.pcr.lottery_system.infrastructure.dto.ParticipantRegistrationRequest;
-import com.pcr.lottery_system.infrastructure.persistance.JsonParticipantRepository;
+import com.pcr.lottery_system.infrastructure.persistence.JsonParticipantRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

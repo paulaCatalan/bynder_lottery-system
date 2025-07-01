@@ -3,7 +3,7 @@ package com.pcr.lottery_system;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.pcr.lottery_system.domain.repository.ParticipantRepository;
-import com.pcr.lottery_system.infrastructure.persistance.MongoParticipantRepository;
+import com.pcr.lottery_system.infrastructure.persistence.MongoParticipantRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.pcr.lottery_system.infrastructure.persistance;
+package com.pcr.lottery_system.infrastructure.persistence;
 
 import com.pcr.lottery_system.domain.model.Ballot;
 import com.pcr.lottery_system.domain.exception.BallotAlreadyExistsException;

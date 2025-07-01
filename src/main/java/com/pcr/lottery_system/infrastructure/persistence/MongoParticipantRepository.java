@@ -1,4 +1,4 @@
-package com.pcr.lottery_system.infrastructure.persistance;
+package com.pcr.lottery_system.infrastructure.persistence;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.pcr.lottery_system.domain.model.Participant;
