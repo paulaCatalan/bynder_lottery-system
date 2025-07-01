@@ -8,16 +8,80 @@ This is a Spring Boot application with dependency management done via Gradle (bu
 
 Java 17 is required.
 
+### Database Setup (MongoDB with Docker)
+
+This application uses MongoDB for data persistence in production. A Docker Compose setup is provided for easy local development.
+
+#### Prerequisites
+- Docker and Docker Compose installed on your machine
+
+#### MongoDB Setup Commands
+
+**Start MongoDB database:**
+```bash
+docker-compose up -d mongodb
+```
+
+**View MongoDB logs:**
+```bash
+docker logs lottery-mongodb
+```
+
+**Connect to MongoDB shell (for debugging):**
+```bash
+docker exec -it lottery-mongodb mongosh mongodb://lottery_user:lottery_password@localhost:27017/lottery_system_db
+```
+
+
+#### Database Configuration
+
+The application is configured to use MongoDB in production mode (default profile) with the following settings:
+- **Database**: `lottery_system_db`
+- **Host**: `localhost:27017`
+- **Username**: `lottery_user`
+- **Password**: `lottery_password`
+
+The `init-mongo.js` script automatically:
+- Creates the database and user
+- Sets up unique indexes on `id` and `email` fields for the participants collection
+
+#### Data Persistence
+
+- **Participant Data**: Always persisted to MongoDB database (in production mode)
+- **Lottery Events & Ballots**: Stored in JSON files for both production and test modes
+- **Test Mode**: All data (including participants) uses JSON files for testing isolation
+
+The application uses a hybrid persistence approach:
+- MongoDB provides robust, scalable storage for participant registration
+- JSON files maintain simplicity for lottery events and ballot management
+
+**🏗️ Architecture Highlight**: This project demonstrates how clean architecture with dependency inversion makes persistence technology switches seamless. The transition from JSON to MongoDB for participant data required zero changes to business logic - only swapping repository implementations. The same pattern could easily be applied to migrate lottery events and ballots to MongoDB or any other database.
+
 ### Spring Boot commands
-**To build the app (and also run tests):** 
+
+**Prerequisites: Start MongoDB first:**
+```bash
+docker-compose up -d mongodb
+```
+
+**To build the app (and also run tests):**
 
 `./gradlew clean build`
 
-**To run the server:** 
+**To run the server:**
 
 `./gradlew bootRun`
 
 The server will be started in port 8080 (http://localhost:8080/)
+
+**View database contents:**
+```bash
+# List all participants
+docker exec lottery-mongodb mongosh mongodb://lottery_user:lottery_password@localhost:27017/lottery_system_db --eval "db.participants.find().pretty()"
+
+# Count participants
+docker exec lottery-mongodb mongosh mongodb://lottery_user:lottery_password@localhost:27017/lottery_system_db --eval "db.participants.countDocuments()"
+```
 
 ## System functionalities
 
@@ -57,24 +121,24 @@ The Lottery System automates the lifecycle of daily lottery events through sched
 
 * **Lottery Opening:**
 
-    * A scheduled task runs daily at **9:00 AM (09:00:00)**.
+  * A scheduled task runs daily at **9:00 AM (09:00:00)**.
 
-    * Its primary function is to create a new `OPEN` lottery event for the current day.
+  * Its primary function is to create a new `OPEN` lottery event for the current day.
 
 
 * **Lottery Closing and Winner Drawing:**
 
-    * A separate scheduled task runs daily at **midnight (00:00:00)**.
+  * A separate scheduled task runs daily at **midnight (00:00:00)**.
 
-    * This task identifies *all* currently `OPEN` lottery events.
+  * This task identifies *all* currently `OPEN` lottery events.
 
-    * It then proceeds to change the status of each of these `OPEN` lotteries to `CLOSED`.
+  * It then proceeds to change the status of each of these `OPEN` lotteries to `CLOSED`.
 
-    * Immediately after closing, it attempts to **draw a winner** for each closed lottery.
+  * Immediately after closing, it attempts to **draw a winner** for each closed lottery.
 
-    * If there are submitted ballots, a random winner is selected, and the lottery status is updated to `DRAWN`.
+  * If there are submitted ballots, a random winner is selected, and the lottery status is updated to `DRAWN`.
 
-    * If there are no ballots submitted for a closed lottery, it remains in the `CLOSED` status with no winner.
+  * If there are no ballots submitted for a closed lottery, it remains in the `CLOSED` status with no winner.
 
 ## Other resources related to this development
 
