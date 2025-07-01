@@ -1,7 +1,18 @@
 spring:
   application:
     name: lottery_system
+  profiles:
+    active: test
 
+# Test configuration - all repositories use JSON files
 participants:
   file:
     path: participants.json
+
+lottery_events:
+  file:
+    path: lottery_events.json
+
+ballots:
+  file:
+    path: submitted_ballots.json

@@ -1,12 +1,11 @@
-db = db.getSiblingDB("mydatabase");
+db = db.getSiblingDB("lottery_system_db");
 
 db.createUser({
-  user: "myuser",
-  pwd: "mypassword",
-  roles: [{ role: "readWrite", db: "mydatabase" }]
+  user: "lottery_user",
+  pwd: "lottery_password",
+  roles: [{ role: "readWrite", db: "lottery_system_db" }]
 });
 
-db.sampleCollection.insertMany([
-  { name: "Alice", age: 30 },
-  { name: "Bob", age: 25 }
-]);
+// Initialize empty collections for lottery system
+db.participants.createIndex({ "id": 1 }, { unique: true });
+db.participants.createIndex({ "email": 1 }, { unique: true });

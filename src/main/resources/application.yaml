@@ -2,6 +2,14 @@ spring:
   application:
     name: lottery_system
 
+# MongoDB configuration (for ParticipantRepository)
+mongodb:
+  connection:
+    string: mongodb://lottery_user:lottery_password@localhost:27017/lottery_system_db
+  database:
+    name: lottery_system_db
+
+# JSON file paths (for LotteryEventRepository and BallotRepository)
 participants:
   file:
     path: src/main/resources/participants.json
